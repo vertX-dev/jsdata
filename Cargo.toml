@@ -2,8 +2,16 @@
 name = "jsdata"
 version = "0.1.0"
 edition = "2021"
-description = "Extract JS declarations from addon sources into a generated _wikiData.js module"
+authors = ["vertX"]
+description = "Extract JS declarations from source files into a generated ES module"
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/vertX-dev/jsdata"
+homepage = "https://github.com/vertX-dev/jsdata"
+keywords = ["javascript", "codegen", "extract", "documentation", "versioning"]
+categories = ["command-line-utilities", "development-tools::build-utils"]
+rust-version = "1.85"
+exclude = ["extension/", ".github/"]
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

@@ -257,6 +257,32 @@ dropped, so `jsdata` warns when it sees that combination.
 It reads `jsdata.cfg` from the workspace root. Not published to the Marketplace yet — build it
 with `npm install && npm run compile` in `extension/`.
 
+## Security
+
+`jsdata` never executes anything from a config — no shell hooks, no scripts, no plugins. Running
+it on a repository you did not write is closer to running a formatter than to running its build.
+Three behaviours are still worth knowing before you point it at someone else's tree.
+
+**Config files can read any path you can read.** Sources are ordinary paths and may be absolute
+or use `~`, so a config is free to name something outside its own project. The contents of
+whatever it names are copied into the generated module. Read a config before running it, the same
+way you would read a Makefile.
+
+**Paths expand environment variables.** `%VAR%`, `$VAR`, `${VAR}` and `${VAR:-fallback}` are
+resolved from the process environment at build time. A path like `${HOME}/.config/x` therefore
+resolves against *your* environment. Values are only ever used to build paths — they are not
+copied into the output — but a config can still steer a read toward a location you did not
+intend.
+
+**`md ... <-- html` does not sanitize.** Markdown is converted with raw HTML passed straight
+through, so any HTML or `<script>` in the source file lands verbatim in the generated module and
+then in whatever page renders it. This is deliberate: the directive exists for changelogs and
+docs you wrote yourself. Do not point it at contributor-submitted markdown, and if you ever need
+to, sanitize downstream before rendering.
+
+The generated module is a build artifact. Treat it as you would any generated code — review the
+diff rather than assuming it is inert.
+
 ## Known issues
 
 - `md` directives do not support version pins yet.

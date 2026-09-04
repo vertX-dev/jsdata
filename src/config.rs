@@ -133,7 +133,11 @@ fn take_config_version(
 /// Fold the two directives into one optional filter.
 fn config_version(spec: Option<String>, tags: Option<Vec<String>>) -> Option<VersionSpec> {
     let v = VersionSpec { spec, tags };
-    if v.is_empty() { None } else { Some(v) }
+    if v.is_empty() {
+        None
+    } else {
+        Some(v)
+    }
 }
 
 /// Expand `~` / `%VAR%` / `$VAR` / `${VAR:-fallback}` in a path written in the
@@ -168,7 +172,9 @@ fn parse_langs_rhs(
         .ok_or_else(|| format!("line {n}: missing second `<--` before languages.json"))?;
     let (texts, ljson) = (texts.trim(), ljson.trim());
     if texts.is_empty() || ljson.is_empty() {
-        return Err(format!("line {n}: texts dir and languages.json are both required"));
+        return Err(format!(
+            "line {n}: texts dir and languages.json are both required"
+        ));
     }
     Ok(Entry::Langs {
         name: "langs".into(),
@@ -257,7 +263,9 @@ pub fn parse(text: &str, dir: &Path) -> (Config, Vec<String>) {
             "md" => {
                 let (rest, pin) = take_version_suffix(rest);
                 if pin.is_some() {
-                    errors.push(format!("line {n}: version filtering is not supported on `md` yet"));
+                    errors.push(format!(
+                        "line {n}: version filtering is not supported on `md` yet"
+                    ));
                     continue;
                 }
                 // NAME <-- FILE           (verbatim markdown string)
@@ -383,7 +391,14 @@ pub fn parse(text: &str, dir: &Path) -> (Config, Vec<String>) {
 
     let out = out.unwrap_or_else(|| dir.join("_wikiData.js"));
     let version = config_version(spec, tags);
-    (Config { out, entries, version }, errors)
+    (
+        Config {
+            out,
+            entries,
+            version,
+        },
+        errors,
+    )
 }
 
 /// One entry in a `--pull-all` merge config, in config (= emit) order.
@@ -580,7 +595,14 @@ pub fn parse_merge(text: &str, dir: &Path) -> (MergeConfig, Vec<String>) {
 
     let out = out.unwrap_or_else(|| dir.join("_wikiData.js"));
     let version = config_version(spec, tags);
-    (MergeConfig { out, entries, version }, errors)
+    (
+        MergeConfig {
+            out,
+            entries,
+            version,
+        },
+        errors,
+    )
 }
 
 #[cfg(test)]
@@ -727,7 +749,10 @@ mod tests {
         assert!(errs[0].starts_with("line 1:"), "{}", errs[0]);
 
         let (_, errs) = p("version = 2.1\nversion = 2.2\n");
-        assert!(errs.iter().any(|e| e.contains("duplicate `version`")), "{errs:?}");
+        assert!(
+            errs.iter().any(|e| e.contains("duplicate `version`")),
+            "{errs:?}"
+        );
 
         let (_, errs) = p("versionTags = [a]\nversionTags = [b]\n");
         assert!(
@@ -822,7 +847,10 @@ mod tests {
             assert_eq!(cfg.out, Path::new("base/site/all.js"));
             match &cfg.entries[0] {
                 MergeEntry::Project { source, .. } => {
-                    assert_eq!(source, Path::new("/projects/betterPotions/src/_wikiData.js"))
+                    assert_eq!(
+                        source,
+                        Path::new("/projects/betterPotions/src/_wikiData.js")
+                    )
                 }
                 other => panic!("expected project, got {other:?}"),
             }
@@ -932,7 +960,12 @@ mod tests {
         assert!(errs.is_empty(), "{errs:?}");
         assert_eq!(cfg.entries.len(), 2);
         match &cfg.entries[1] {
-            Entry::Langs { name, texts_dir, languages_json, .. } => {
+            Entry::Langs {
+                name,
+                texts_dir,
+                languages_json,
+                ..
+            } => {
                 assert_eq!(name, "langs");
                 assert!(texts_dir.ends_with("texts"));
                 assert!(languages_json.ends_with("texts/languages.json"));
@@ -1013,7 +1046,11 @@ mod tests {
             _ => panic!("expected project"),
         }
         match &cfg.entries[1] {
-            MergeEntry::Langs { texts_dir, languages_json, .. } => {
+            MergeEntry::Langs {
+                texts_dir,
+                languages_json,
+                ..
+            } => {
                 assert!(texts_dir.ends_with("texts"));
                 assert!(languages_json.ends_with("texts/languages.json"));
             }
@@ -1065,12 +1102,12 @@ mod tests {
 
     #[test]
     fn merge_config_duplicate_langs() {
-        let (_, errs) = parse_merge(
-            "langs <-- t --> j\nlangs <-- t2 <-- j2",
-            Path::new("b"),
-        );
+        let (_, errs) = parse_merge("langs <-- t --> j\nlangs <-- t2 <-- j2", Path::new("b"));
         // first line has no second `<--` (uses `-->`), second is a dup only if first parsed;
         // here first errors on missing second `<--`, second succeeds
-        assert!(errs.iter().any(|e| e.contains("missing second `<--`")), "{errs:?}");
+        assert!(
+            errs.iter().any(|e| e.contains("missing second `<--`")),
+            "{errs:?}"
+        );
     }
 }

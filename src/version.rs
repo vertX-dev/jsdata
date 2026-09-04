@@ -119,7 +119,9 @@ pub fn style_for(ext: &str) -> CommentStyle {
 /// The `(FilterMode, tag_filter)` pair a [`VersionSpec`] denotes — the same
 /// values [`filter_source`] uses, exposed so the duplicate picker can evaluate
 /// markers itself.
-pub fn filter_parts(version: &VersionSpec) -> Result<(vertion::filter::FilterMode, Vec<String>), String> {
+pub fn filter_parts(
+    version: &VersionSpec,
+) -> Result<(vertion::filter::FilterMode, Vec<String>), String> {
     let tokens: Vec<String> = match &version.spec {
         Some(s) => s.split_whitespace().map(String::from).collect(),
         None => vec![UNBOUNDED.to_string()],
@@ -211,7 +213,10 @@ mod tests {
         // tags, so every *tagged* block is skipped — untagged content stays.
         let none = filter_source(TAGGED, "js", &spec("2.1")).unwrap();
         assert!(none.contains("base: 1"), "{none}");
-        assert!(!none.contains("beta: 2") && !none.contains("ui: 3"), "{none}");
+        assert!(
+            !none.contains("beta: 2") && !none.contains("ui: 3"),
+            "{none}"
+        );
 
         // `*` is the wildcard that admits every tag.
         let all = filter_source(

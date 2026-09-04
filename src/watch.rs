@@ -23,10 +23,10 @@ struct State {
     // per entry, config order. `Ok(None)` = declared but absent at the
     // active version — skipped with a warning, not an error.
     values: Vec<Result<Option<String>, String>>,
-    warns: Vec<Vec<String>>,             // per entry (langs missing-locale etc.)
-    triggers: Vec<Trigger>,              // per entry, what change re-resolves it
+    warns: Vec<Vec<String>>, // per entry (langs missing-locale etc.)
+    triggers: Vec<Trigger>,  // per entry, what change re-resolves it
     cli_version: crate::version::VersionSpec, // command-line --version/--tag
-    display: String,                     // config path as given, for the header
+    display: String,         // config path as given, for the header
 }
 
 impl State {
@@ -60,12 +60,21 @@ impl State {
             .entries
             .iter()
             .map(|e| match e {
-                Entry::Var { source, .. } | Entry::Md { source, .. } => {
-                    source.canonicalize().ok().map_or(Trigger::Static, Trigger::File)
-                }
-                Entry::Langs { texts_dir, languages_json, .. } => Trigger::Langs {
-                    dir: texts_dir.canonicalize().unwrap_or_else(|_| texts_dir.clone()),
-                    json: languages_json.canonicalize().unwrap_or_else(|_| languages_json.clone()),
+                Entry::Var { source, .. } | Entry::Md { source, .. } => source
+                    .canonicalize()
+                    .ok()
+                    .map_or(Trigger::Static, Trigger::File),
+                Entry::Langs {
+                    texts_dir,
+                    languages_json,
+                    ..
+                } => Trigger::Langs {
+                    dir: texts_dir
+                        .canonicalize()
+                        .unwrap_or_else(|_| texts_dir.clone()),
+                    json: languages_json
+                        .canonicalize()
+                        .unwrap_or_else(|_| languages_json.clone()),
                 },
                 Entry::Let { .. } => Trigger::Static,
             })
@@ -103,11 +112,8 @@ impl State {
         let cfg_ver = self.cfg.version.as_ref();
         for &i in &hits {
             let entry = &self.cfg.entries[i];
-            let eff = crate::effective_version(&[
-                entry_version(entry),
-                Some(&self.cli_version),
-                cfg_ver,
-            ]);
+            let eff =
+                crate::effective_version(&[entry_version(entry), Some(&self.cli_version), cfg_ver]);
             let (res, warns) = resolve_langs_entry(entry, eff.as_ref());
             self.values[i] = res;
             self.warns[i] = warns;
@@ -138,7 +144,11 @@ impl State {
             for e in &errors {
                 eprintln!("error: {e}");
             }
-            eprintln!("not writing {} ({} error(s))", nice(&self.cfg.out), errors.len());
+            eprintln!(
+                "not writing {} ({} error(s))",
+                nice(&self.cfg.out),
+                errors.len()
+            );
             return;
         }
         let content = emit::render(&self.display, &ok);
@@ -183,7 +193,9 @@ pub fn watch_with(config_path: &Path, opts: &crate::Options) -> Result<(), Strin
     eprintln!("watching (Ctrl-C to stop)...");
 
     loop {
-        let first = rx.recv().map_err(|_| "watcher channel closed".to_string())?;
+        let first = rx
+            .recv()
+            .map_err(|_| "watcher channel closed".to_string())?;
         let mut changed: HashSet<PathBuf> = HashSet::new();
         changed.extend(first.into_iter().filter_map(|p| p.canonicalize().ok()));
         // debounce: keep draining until ~200 ms of quiet
@@ -229,10 +241,18 @@ fn rewatch(
             Entry::Var { source, .. } | Entry::Md { source, .. } => {
                 want.insert(dir_of(source));
             }
-            Entry::Langs { texts_dir, languages_json, .. } => {
+            Entry::Langs {
+                texts_dir,
+                languages_json,
+                ..
+            } => {
                 // the texts dir itself holds the .lang files; also cover
                 // languages.json's dir in case it lives elsewhere
-                want.insert(texts_dir.canonicalize().unwrap_or_else(|_| texts_dir.clone()));
+                want.insert(
+                    texts_dir
+                        .canonicalize()
+                        .unwrap_or_else(|_| texts_dir.clone()),
+                );
                 want.insert(dir_of(languages_json));
             }
             Entry::Let { .. } => {}

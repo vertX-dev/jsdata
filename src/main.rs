@@ -1,7 +1,7 @@
 use clap::Parser;
+use jsdata::version::VersionSpec;
 use std::path::PathBuf;
 use std::process::ExitCode;
-use jsdata::version::VersionSpec;
 
 /// Extract JS declarations into a generated wiki-data ES module.
 //

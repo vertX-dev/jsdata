@@ -97,7 +97,11 @@ fn pull_all_merges_projects_namespaced() {
     )
     .unwrap();
     fs::create_dir_all(d.join("boss/wiki")).unwrap();
-    fs::write(d.join("boss/wiki/_wikiData.js"), "export const BOSS = { hp: 300 };\n").unwrap();
+    fs::write(
+        d.join("boss/wiki/_wikiData.js"),
+        "export const BOSS = { hp: 300 };\n",
+    )
+    .unwrap();
     fs::write(
         d.join("all.cfg"),
         "out site/_all.js\nvars betterPotions <-- bp --> wiki/_wikiData.js\nvars boss <-- boss --> wiki/_wikiData.js\n",
@@ -109,9 +113,18 @@ fn pull_all_merges_projects_namespaced() {
     assert_eq!(o.wrote, Some(true));
 
     let out = fs::read_to_string(d.join("site/_all.js")).unwrap();
-    assert!(out.contains("export const betterPotions = (() => {"), "{out}");
-    assert!(out.contains("const PASSIVES = { regen: { cost: 1 } };"), "{out}");
-    assert!(out.contains("const PASSIVE_COUNT = Object.keys(PASSIVES).length;"), "{out}");
+    assert!(
+        out.contains("export const betterPotions = (() => {"),
+        "{out}"
+    );
+    assert!(
+        out.contains("const PASSIVES = { regen: { cost: 1 } };"),
+        "{out}"
+    );
+    assert!(
+        out.contains("const PASSIVE_COUNT = Object.keys(PASSIVES).length;"),
+        "{out}"
+    );
     assert!(out.contains("return { PASSIVES, PASSIVE_COUNT };"), "{out}");
     assert!(out.contains("export const boss = (() => {"), "{out}");
     assert!(out.contains("return { BOSS };"), "{out}");
@@ -126,7 +139,11 @@ fn pull_all_merges_projects_namespaced() {
 fn build_with_markdown_raw_and_html() {
     let d = scratch("md");
     fs::create_dir_all(d.join("docs")).unwrap();
-    fs::write(d.join("docs/guide.md"), "# Guide\n\nUse **potions** wisely.\n").unwrap();
+    fs::write(
+        d.join("docs/guide.md"),
+        "# Guide\n\nUse **potions** wisely.\n",
+    )
+    .unwrap();
     fs::write(
         d.join("jsdata.cfg"),
         "out _wikiData.js\nmd GUIDE_MD <-- docs/guide.md\nmd GUIDE_HTML <-- docs/guide.md <-- html\n",
@@ -139,7 +156,10 @@ fn build_with_markdown_raw_and_html() {
 
     let out = fs::read_to_string(d.join("_wikiData.js")).unwrap();
     // raw markdown: kept verbatim, newlines escaped into a one-line JS string
-    assert!(out.contains(r##"export const GUIDE_MD = "# Guide\n\nUse **potions** wisely.\n";"##), "{out}");
+    assert!(
+        out.contains(r##"export const GUIDE_MD = "# Guide\n\nUse **potions** wisely.\n";"##),
+        "{out}"
+    );
     // html: converted, tags present, quotes/newlines escaped
     assert!(out.contains("export const GUIDE_HTML = \""), "{out}");
     assert!(out.contains("<h1>Guide</h1>"), "{out}");
@@ -151,7 +171,11 @@ fn build_single_project_with_var_let_and_langs() {
     // this is what `--pull` runs: a normal config that also carries `langs`
     let d = scratch("pullbuild");
     fs::create_dir_all(d.join("bp/scripts")).unwrap();
-    fs::write(d.join("bp/scripts/main.js"), "export const PASSIVES = { a: 1, b: 2 };\n").unwrap();
+    fs::write(
+        d.join("bp/scripts/main.js"),
+        "export const PASSIVES = { a: 1, b: 2 };\n",
+    )
+    .unwrap();
     fs::create_dir_all(d.join("texts")).unwrap();
     fs::write(d.join("texts/languages.json"), "[\"en_US\"]").unwrap();
     fs::write(d.join("texts/en_US.lang"), "rrs.rarity.common=§7§lCommon\n").unwrap();
@@ -166,11 +190,20 @@ fn build_single_project_with_var_let_and_langs() {
     assert_eq!(o.wrote, Some(true));
 
     let out = fs::read_to_string(d.join("_wikiData.js")).unwrap();
-    assert!(out.contains("export const PASSIVES = { a: 1, b: 2 };"), "{out}");
-    assert!(out.contains("export const COUNT = Object.keys(PASSIVES).length;"), "{out}");
+    assert!(
+        out.contains("export const PASSIVES = { a: 1, b: 2 };"),
+        "{out}"
+    );
+    assert!(
+        out.contains("export const COUNT = Object.keys(PASSIVES).length;"),
+        "{out}"
+    );
     assert!(out.contains("export const langs = {"), "{out}");
     assert!(out.contains("  en_US: {"), "{out}");
-    assert!(out.contains("\"rrs.rarity.common\": \"§7§lCommon\","), "{out}");
+    assert!(
+        out.contains("\"rrs.rarity.common\": \"§7§lCommon\","),
+        "{out}"
+    );
     // config order preserved: PASSIVES, COUNT, langs
     let (p, c, l) = (
         out.find("const PASSIVES").unwrap(),
@@ -184,7 +217,11 @@ fn build_single_project_with_var_let_and_langs() {
 fn pull_langs_bundle_from_languages_json() {
     let d = scratch("langs");
     fs::create_dir_all(d.join("texts")).unwrap();
-    fs::write(d.join("texts/languages.json"), "[\n  \"en_US\",\n  \"ar_SA\",\n  \"missing_XX\"\n]").unwrap();
+    fs::write(
+        d.join("texts/languages.json"),
+        "[\n  \"en_US\",\n  \"ar_SA\",\n  \"missing_XX\"\n]",
+    )
+    .unwrap();
     fs::write(
         d.join("texts/en_US.lang"),
         "pack.name=Rarity & Stats\n\n## tiers\nrrs.rarity.common=§7§lCommon\nrrs.rarity.rare=§9§lRare\n",
@@ -192,17 +229,28 @@ fn pull_langs_bundle_from_languages_json() {
     .unwrap();
     fs::write(d.join("texts/ar_SA.lang"), "pack.name=الندرة\n").unwrap();
     // missing_XX.lang deliberately absent -> warning, skipped
-    fs::write(d.join("all.cfg"), "out _all.js\nlangs <-- texts <-- texts/languages.json\n").unwrap();
+    fs::write(
+        d.join("all.cfg"),
+        "out _all.js\nlangs <-- texts <-- texts/languages.json\n",
+    )
+    .unwrap();
 
     let o = jsdata::pull_all(&d.join("all.cfg"), true, None);
     assert!(o.errors.is_empty(), "{:?}", o.errors);
     assert_eq!(o.wrote, Some(true));
-    assert!(o.warnings.iter().any(|w| w.contains("missing_XX")), "{:?}", o.warnings);
+    assert!(
+        o.warnings.iter().any(|w| w.contains("missing_XX")),
+        "{:?}",
+        o.warnings
+    );
 
     let out = fs::read_to_string(d.join("_all.js")).unwrap();
     assert!(out.contains("export const langs = {"), "{out}");
     assert!(out.contains("  en_US: {"), "{out}");
-    assert!(out.contains("\"rrs.rarity.common\": \"§7§lCommon\","), "{out}");
+    assert!(
+        out.contains("\"rrs.rarity.common\": \"§7§lCommon\","),
+        "{out}"
+    );
     assert!(out.contains("\"pack.name\": \"Rarity & Stats\","), "{out}");
     assert!(out.contains("  ar_SA: {"), "{out}");
     assert!(out.contains("الندرة"), "{out}");
@@ -230,13 +278,19 @@ fn version_directive_and_command_override() {
     assert!(o.errors.is_empty(), "{:?}", o.errors);
     let out = fs::read_to_string(d.join("_wikiData.js")).unwrap();
     assert!(out.contains("regen: 1"), "{out}");
-    assert!(!out.contains("ascended"), "2.0 build must drop 2.1 content: {out}");
+    assert!(
+        !out.contains("ascended"),
+        "2.0 build must drop 2.1 content: {out}"
+    );
 
     // command `-v 2.1` overrides the cfg directive → ascended kept
     let o2 = jsdata::build(&d.join("jsdata.cfg"), true, Some("2.1"));
     assert!(o2.errors.is_empty(), "{:?}", o2.errors);
     let out2 = fs::read_to_string(d.join("_wikiData.js")).unwrap();
-    assert!(out2.contains("ascended: 5"), "-v overrides cfg version: {out2}");
+    assert!(
+        out2.contains("ascended: 5"),
+        "-v overrides cfg version: {out2}"
+    );
 }
 
 #[test]
@@ -254,7 +308,10 @@ fn per_directive_pin_beats_command() {
     let o = jsdata::build(&d.join("jsdata.cfg"), true, Some("2.0"));
     assert!(o.errors.is_empty(), "{:?}", o.errors);
     let out = fs::read_to_string(d.join("_wikiData.js")).unwrap();
-    assert!(out.contains("ascended: 5"), "pin `--- 2.1` beats -v 2.0: {out}");
+    assert!(
+        out.contains("ascended: 5"),
+        "pin `--- 2.1` beats -v 2.0: {out}"
+    );
 }
 
 #[test]
@@ -282,8 +339,14 @@ fn pull_all_hybrid_per_project_version() {
     // RarityStats (pinned 2.1) keeps ascended; OtherAddon (global 2.0) drops it
     let rarity = &out[out.find("RarityStats").unwrap()..out.find("OtherAddon").unwrap()];
     let other = &out[out.find("OtherAddon").unwrap()..];
-    assert!(rarity.contains("ascended: 5"), "pinned project at 2.1: {rarity}");
-    assert!(!other.contains("ascended"), "global 2.0 project drops 2.1: {other}");
+    assert!(
+        rarity.contains("ascended: 5"),
+        "pinned project at 2.1: {rarity}"
+    );
+    assert!(
+        !other.contains("ascended"),
+        "global 2.0 project drops 2.1: {other}"
+    );
 }
 
 #[test]
@@ -357,12 +420,21 @@ fn pull_all_builds_project_from_config() {
     assert_eq!(o.wrote, Some(true));
 
     let out = fs::read_to_string(d.join("site/_all.js")).unwrap();
-    assert!(out.contains("export const betterPotions = (() => {"), "{out}");
+    assert!(
+        out.contains("export const betterPotions = (() => {"),
+        "{out}"
+    );
     assert!(out.contains("const PASSIVES = { a: 1, b: 2 };"), "{out}");
-    assert!(out.contains("const COUNT = Object.keys(PASSIVES).length;"), "{out}");
+    assert!(
+        out.contains("const COUNT = Object.keys(PASSIVES).length;"),
+        "{out}"
+    );
     assert!(out.contains("return { PASSIVES, COUNT };"), "{out}");
     // building from config must NOT write the project's own _wikiData.js
-    assert!(!d.join("bp/_wikiData.js").exists(), "config form is in-memory only");
+    assert!(
+        !d.join("bp/_wikiData.js").exists(),
+        "config form is in-memory only"
+    );
 }
 
 #[test]
@@ -370,18 +442,30 @@ fn pull_all_from_config_surfaces_project_errors() {
     let d = scratch("pullcfgerr");
     fs::create_dir_all(d.join("bp")).unwrap();
     fs::write(d.join("bp/jsdata.cfg"), "var X = missing.js -> const X\n").unwrap();
-    fs::write(d.join("all.cfg"), "out _all.js\nvars bp <-- bp <-- jsdata.cfg\n").unwrap();
+    fs::write(
+        d.join("all.cfg"),
+        "out _all.js\nvars bp <-- bp <-- jsdata.cfg\n",
+    )
+    .unwrap();
 
     let o = jsdata::pull_all(&d.join("all.cfg"), true, None);
     assert_eq!(o.errors.len(), 1, "{:?}", o.errors);
-    assert!(o.errors[0].contains("bp:") && o.errors[0].contains("cannot read"), "{:?}", o.errors);
+    assert!(
+        o.errors[0].contains("bp:") && o.errors[0].contains("cannot read"),
+        "{:?}",
+        o.errors
+    );
     assert_eq!(o.wrote, None);
 }
 
 #[test]
 fn pull_all_check_reports_missing_and_writes_nothing() {
     let d = scratch("pullerr");
-    fs::write(d.join("all.cfg"), "out _all.js\nvars missing <-- nope --> _wikiData.js\n").unwrap();
+    fs::write(
+        d.join("all.cfg"),
+        "out _all.js\nvars missing <-- nope --> _wikiData.js\n",
+    )
+    .unwrap();
     let o = jsdata::pull_all(&d.join("all.cfg"), false, None); // --check
     assert_eq!(o.errors.len(), 1, "{:?}", o.errors);
     assert!(o.errors[0].contains("cannot read"), "{:?}", o.errors);
@@ -396,7 +480,10 @@ fn default_out_and_default_config_name() {
     fs::write(d.join("jsdata.cfg"), "var A = a.js -> const A\n").unwrap();
     let o = jsdata::build(&d.join("jsdata.cfg"), true, None);
     assert!(o.errors.is_empty(), "{:?}", o.errors);
-    assert!(d.join("_wikiData.js").exists(), "defaults next to the config");
+    assert!(
+        d.join("_wikiData.js").exists(),
+        "defaults next to the config"
+    );
 }
 
 /// The full version/tag precedence chain, end to end: pin > CLI > config, with
@@ -504,7 +591,10 @@ fn duplicate_declarations_resolve_by_version() {
         let o = jsdata::build(&cfg, true, Some(spec));
         assert!(o.errors.is_empty(), "{spec}: {:?}", o.errors);
         let js = fs::read_to_string(&out).unwrap();
-        assert!(js.contains(expect), "at {spec} expected {expect}, got:\n{js}");
+        assert!(
+            js.contains(expect),
+            "at {spec} expected {expect}, got:\n{js}"
+        );
     }
 
     // No version at all: everything is valid, so the newest still wins — an
@@ -518,13 +608,18 @@ fn duplicate_declarations_resolve_by_version() {
     let o = jsdata::build(&cfg, true, Some("0.9"));
     assert!(o.errors.is_empty(), "should not fail: {:?}", o.errors);
     assert!(
-        o.warnings.iter().any(|w| w.contains("C") && w.contains("skipped")),
+        o.warnings
+            .iter()
+            .any(|w| w.contains("C") && w.contains("skipped")),
         "{:?}",
         o.warnings
     );
     let js = fs::read_to_string(&out).unwrap();
-    assert!(!js.contains("export const C"), "skipped entry emitted:
-{js}");
+    assert!(
+        !js.contains("export const C"),
+        "skipped entry emitted:
+{js}"
+    );
 
     let _ = fs::remove_dir_all(&d);
 }
@@ -552,7 +647,10 @@ fn the_chosen_declaration_is_still_filtered_inside() {
     jsdata::build(&cfg, true, Some("2.2"));
     let js = fs::read_to_string(&out).unwrap();
     assert!(js.contains("a: 1") && !js.contains("old"), "{js}");
-    assert!(!js.contains("b: 2"), "nested 2.5 block survived at 2.2:\n{js}");
+    assert!(
+        !js.contains("b: 2"),
+        "nested 2.5 block survived at 2.2:\n{js}"
+    );
 
     jsdata::build(&cfg, true, Some("2.5"));
     let js = fs::read_to_string(&out).unwrap();
@@ -583,13 +681,17 @@ fn absent_at_version_is_skipped_not_fatal() {
     assert!(o.errors.is_empty(), "should not fail: {:?}", o.errors);
     assert_eq!(o.wrote, Some(true));
     assert!(
-        o.warnings.iter().any(|w| w.contains("LATER") && w.contains("skipped")),
+        o.warnings
+            .iter()
+            .any(|w| w.contains("LATER") && w.contains("skipped")),
         "{:?}",
         o.warnings
     );
     // A `let` naming a skipped entry goes too — otherwise the module throws.
     assert!(
-        o.warnings.iter().any(|w| w.contains("COUNT") && w.contains("references skipped")),
+        o.warnings
+            .iter()
+            .any(|w| w.contains("COUNT") && w.contains("references skipped")),
         "{:?}",
         o.warnings
     );

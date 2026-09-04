@@ -14,9 +14,9 @@ pub mod version;
 pub mod watch;
 
 use config::{Config, Entry, MergeEntry};
-use version::VersionSpec;
 use std::fs;
 use std::path::{Path, PathBuf};
+use version::VersionSpec;
 
 /// Everything a single run can be told from the command line: `--version` and
 /// `--tag`. Per-project versions live on the merge config's `vars` lines
@@ -43,7 +43,11 @@ pub(crate) fn effective_version(layers: &[Option<&VersionSpec>]) -> Option<Versi
     let spec = layers.iter().flatten().find_map(|v| v.spec.clone());
     let tags = layers.iter().flatten().find_map(|v| v.tags.clone());
     let v = VersionSpec { spec, tags };
-    if v.is_empty() { None } else { Some(v) }
+    if v.is_empty() {
+        None
+    } else {
+        Some(v)
+    }
 }
 
 #[derive(Debug)]
@@ -75,11 +79,7 @@ pub(crate) fn entry_version(entry: &Entry) -> Option<&VersionSpec> {
 
 /// Filter `src` to `version` (Vertion markers) before extraction, if a version
 /// is in effect; otherwise return it unchanged.
-fn apply_version(
-    src: &str,
-    path: &Path,
-    version: Option<&VersionSpec>,
-) -> Result<String, String> {
+fn apply_version(src: &str, path: &Path, version: Option<&VersionSpec>) -> Result<String, String> {
     match version {
         Some(v) => {
             let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
@@ -95,14 +95,17 @@ fn apply_version(
 pub fn resolve(entry: &Entry, version: Option<&VersionSpec>) -> Result<Option<String>, String> {
     match entry {
         Entry::Let { expr, .. } => Ok(Some(expr.clone())),
-        Entry::Var { name, source, decl, .. } => {
+        Entry::Var {
+            name, source, decl, ..
+        } => {
             let raw = fs::read_to_string(source)
                 .map_err(|e| format!("{name}: cannot read {}: {e}", source.display()))?;
-            extract_declaration(&raw, source, decl, version)
-                .map_err(|e| format!("{name}: {e}"))
+            extract_declaration(&raw, source, decl, version).map_err(|e| format!("{name}: {e}"))
         }
         Entry::Langs { .. } => resolve_langs_entry(entry, version).0,
-        Entry::Md { name, source, html, .. } => {
+        Entry::Md {
+            name, source, html, ..
+        } => {
             let md = fs::read_to_string(source)
                 .map_err(|e| format!("{name}: cannot read {}: {e}", source.display()))?;
             let content = if *html { markdown::to_html(&md) } else { md };
@@ -173,7 +176,9 @@ pub(crate) fn extract_declaration_for_report(
     decl: &str,
     version: Option<&VersionSpec>,
 ) -> Option<String> {
-    extract_declaration(raw, source, decl, version).ok().flatten()
+    extract_declaration(raw, source, decl, version)
+        .ok()
+        .flatten()
 }
 
 /// Read `languages.json` + every `<locale>.lang`, optionally version-filter
@@ -221,12 +226,14 @@ pub(crate) fn resolve_langs_entry(
     version: Option<&VersionSpec>,
 ) -> (Result<Option<String>, String>, Vec<String>) {
     match entry {
-        Entry::Langs { texts_dir, languages_json, .. } => {
-            match resolve_langs(texts_dir, languages_json, version) {
-                Ok((js, warns)) => (Ok(Some(js)), warns),
-                Err(e) => (Err(e), vec![]),
-            }
-        }
+        Entry::Langs {
+            texts_dir,
+            languages_json,
+            ..
+        } => match resolve_langs(texts_dir, languages_json, version) {
+            Ok((js, warns)) => (Ok(Some(js)), warns),
+            Err(e) => (Err(e), vec![]),
+        },
         _ => (resolve(entry, version), vec![]),
     }
 }
@@ -456,7 +463,8 @@ pub fn pull_all_with(config_path: &Path, write: bool, opts: &Options) -> Outcome
                 Ok(src) => match extract::extract_all(&src) {
                     Ok(vars) => {
                         if vars.is_empty() {
-                            warnings.push(format!("{name}: no exports found in {}", source.display()));
+                            warnings
+                                .push(format!("{name}: no exports found in {}", source.display()));
                         }
                         values.push((name.clone(), emit::render_project_iife(&vars)));
                     }
@@ -464,15 +472,15 @@ pub fn pull_all_with(config_path: &Path, write: bool, opts: &Options) -> Outcome
                 },
                 Err(e) => errors.push(format!("{name}: cannot read {}: {e}", source.display())),
             },
-            MergeEntry::ProjectFromConfig { name, config, version: pin } => {
+            MergeEntry::ProjectFromConfig {
+                name,
+                config,
+                version: pin,
+            } => {
                 // rerun the normal build for this project, in memory, at its
                 // effective version: pin → CLI per-project → CLI global → merge-global
-                let eff = effective_version(&[
-                    pin.as_ref(),
-                    Some(&opts.version),
-                    merge_version,
-                ])
-                .unwrap_or_default();
+                let eff = effective_version(&[pin.as_ref(), Some(&opts.version), merge_version])
+                    .unwrap_or_default();
                 let Collected {
                     values: vars,
                     errors: errs,
@@ -482,19 +490,23 @@ pub fn pull_all_with(config_path: &Path, write: bool, opts: &Options) -> Outcome
                 warnings.extend(warns.into_iter().map(|w| format!("{name}: {w}")));
                 if errs.is_empty() {
                     if vars.is_empty() {
-                        warnings.push(format!("{name}: no exports built from {}", config.display()));
+                        warnings.push(format!(
+                            "{name}: no exports built from {}",
+                            config.display()
+                        ));
                     }
                     values.push((name.clone(), emit::render_project_iife(&vars)));
                 } else {
                     errors.extend(errs.into_iter().map(|e| format!("{name}: {e}")));
                 }
             }
-            MergeEntry::Langs { name, texts_dir, languages_json, version: pin } => {
-                let eff = effective_version(&[
-                    pin.as_ref(),
-                    Some(&opts.version),
-                    merge_version,
-                ]);
+            MergeEntry::Langs {
+                name,
+                texts_dir,
+                languages_json,
+                version: pin,
+            } => {
+                let eff = effective_version(&[pin.as_ref(), Some(&opts.version), merge_version]);
                 match resolve_langs(texts_dir, languages_json, eff.as_ref()) {
                     Ok((js, warns)) => {
                         warnings.extend(warns);

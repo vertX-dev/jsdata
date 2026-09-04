@@ -99,17 +99,15 @@ fn scan_pos(src: &str) -> Result<Vec<Decl3>, String> {
                     i += 1;
                 }
             }
-            b'/' if i + 1 < len && b[i + 1] == b'*' => {
-                match find(b, i + 2, b"*/") {
-                    Some(p) => i = p + 2,
-                    None => {
-                        return Err(format!(
-                            "unterminated /* comment (line {})",
-                            line_of(src, i)
-                        ))
-                    }
+            b'/' if i + 1 < len && b[i + 1] == b'*' => match find(b, i + 2, b"*/") {
+                Some(p) => i = p + 2,
+                None => {
+                    return Err(format!(
+                        "unterminated /* comment (line {})",
+                        line_of(src, i)
+                    ))
                 }
-            }
+            },
             b'/' => {
                 if prev == Prev::Value {
                     // division
@@ -203,7 +201,10 @@ fn scan_pos(src: &str) -> Result<Vec<Decl3>, String> {
             c if c == b'_' || c == b'$' || c.is_ascii_alphabetic() || c >= 0x80 => {
                 let start = i;
                 while i < len
-                    && (b[i] == b'_' || b[i] == b'$' || b[i].is_ascii_alphanumeric() || b[i] >= 0x80)
+                    && (b[i] == b'_'
+                        || b[i] == b'$'
+                        || b[i].is_ascii_alphanumeric()
+                        || b[i] >= 0x80)
                 {
                     i += 1;
                 }
@@ -267,7 +268,9 @@ fn scan_pos(src: &str) -> Result<Vec<Decl3>, String> {
             push_decl(&mut out, &mut cap_name, src, start, sig_end.max(start))?;
         } else {
             let n = cap_name.as_deref().unwrap_or("?");
-            return Err(format!("unterminated initializer for `{n}` (EOF at depth {depth})"));
+            return Err(format!(
+                "unterminated initializer for `{n}` (EOF at depth {depth})"
+            ));
         }
     }
     Ok(out)
@@ -343,10 +346,8 @@ fn next_significant(b: &[u8], mut i: usize) -> Option<u8> {
                     i += 1;
                 }
             }
-            b'/' if i + 1 < b.len() && b[i + 1] == b'*' => match find(b, i + 2, b"*/") {
-                Some(p) => i = p + 2,
-                None => return None,
-            },
+            // An unterminated block comment means nothing significant follows.
+            b'/' if i + 1 < b.len() && b[i + 1] == b'*' => i = find(b, i + 2, b"*/")? + 2,
             c => return Some(c),
         }
     }
@@ -441,7 +442,11 @@ mod tests {
     #[test]
     fn extract_all_ignores_nested_and_commented_consts() {
         let src = "export const A = 1;\nfunction f() { const HIDDEN = 2; }\n// const ALSO = 3;\nexport const B = 4;\n";
-        let names: Vec<_> = extract_all(src).unwrap().into_iter().map(|(n, _)| n).collect();
+        let names: Vec<_> = extract_all(src)
+            .unwrap()
+            .into_iter()
+            .map(|(n, _)| n)
+            .collect();
         assert_eq!(names, vec!["A", "B"]);
     }
 
@@ -500,7 +505,10 @@ mod tests {
 
     #[test]
     fn division_not_regex() {
-        assert_eq!(extract("const D = a / b + c / d;", "D").unwrap(), "a / b + c / d");
+        assert_eq!(
+            extract("const D = a / b + c / d;", "D").unwrap(),
+            "a / b + c / d"
+        );
     }
 
     #[test]
@@ -525,7 +533,10 @@ mod tests {
 
     #[test]
     fn trailing_line_comment_not_captured() {
-        assert_eq!(extract("const A = 1 // note\nconst B = 2", "A").unwrap(), "1");
+        assert_eq!(
+            extract("const A = 1 // note\nconst B = 2", "A").unwrap(),
+            "1"
+        );
         assert_eq!(extract("const A = 1 // eof", "A").unwrap(), "1");
     }
 
@@ -559,13 +570,19 @@ mod tests {
 
     #[test]
     fn not_found() {
-        assert!(extract("let A = 1;", "A").unwrap_err().contains("not found"));
+        assert!(extract("let A = 1;", "A")
+            .unwrap_err()
+            .contains("not found"));
     }
 
     #[test]
     fn unterminated_is_loud() {
-        assert!(extract("const A = {", "A").unwrap_err().contains("unterminated"));
-        assert!(extract("const A = 'oops", "A").unwrap_err().contains("unterminated string"));
+        assert!(extract("const A = {", "A")
+            .unwrap_err()
+            .contains("unterminated"));
+        assert!(extract("const A = 'oops", "A")
+            .unwrap_err()
+            .contains("unterminated string"));
     }
 
     #[test]
@@ -577,7 +594,10 @@ mod tests {
     #[test]
     fn arrow_function_initializer() {
         let src = "const F = (a, b) => { return a >= b ? {a} : [b]; };";
-        assert_eq!(extract(src, "F").unwrap(), "(a, b) => { return a >= b ? {a} : [b]; }");
+        assert_eq!(
+            extract(src, "F").unwrap(),
+            "(a, b) => { return a >= b ? {a} : [b]; }"
+        );
     }
 
     #[test]

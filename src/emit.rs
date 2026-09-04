@@ -30,7 +30,11 @@ pub fn render_project_iife(vars: &[(String, String)]) -> String {
         // ponytail: js emitted verbatim, not re-indented — valid, just not pretty
         s.push_str(&format!("  const {v} = {js};\n"));
     }
-    let keys = vars.iter().map(|(v, _)| v.as_str()).collect::<Vec<_>>().join(", ");
+    let keys = vars
+        .iter()
+        .map(|(v, _)| v.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
     s.push_str(&format!("  return {{ {keys} }};\n}})()"));
     s
 }
@@ -158,14 +162,20 @@ mod tests {
         let a = "// built: 2026-01-01T00:00:00Z\nexport const X = 1;\n";
         let b = "// built: 2027-12-31T23:59:59Z\nexport const X = 1;\n";
         assert!(same_ignoring_timestamp(a, b));
-        assert!(!same_ignoring_timestamp(a, "// built: x\nexport const X = 2;\n"));
+        assert!(!same_ignoring_timestamp(
+            a,
+            "// built: x\nexport const X = 2;\n"
+        ));
     }
 
     #[test]
     fn verbatim_body_built_line_still_diffs() {
         let a = "// built: 2026-01-01T00:00:00Z\nexport const X = {\n// built: v1\n};\n";
         let b = "// built: 2027-01-01T00:00:00Z\nexport const X = {\n// built: v2\n};\n";
-        assert!(!same_ignoring_timestamp(a, b), "only the header timestamp is ignorable");
+        assert!(
+            !same_ignoring_timestamp(a, b),
+            "only the header timestamp is ignorable"
+        );
     }
 
     #[test]
@@ -179,7 +189,10 @@ mod tests {
         assert!(out.contains("export const bp = (() => {\n"), "{out}");
         assert!(out.contains("  const PASSIVES = { regen: 1 };\n"));
         assert!(out.contains("  const COUNT = Object.keys(PASSIVES).length;\n"));
-        assert!(out.contains("  return { PASSIVES, COUNT };\n})();\n"), "{out}");
+        assert!(
+            out.contains("  return { PASSIVES, COUNT };\n})();\n"),
+            "{out}"
+        );
     }
 
     #[test]
@@ -197,11 +210,20 @@ mod tests {
         let out = render("all.cfg", &[("langs".into(), obj)]);
         assert!(out.contains("export const langs = {\n"), "{out}");
         assert!(out.contains("  en_US: {\n"));
-        assert!(out.contains("    \"rrs.rarity.common\": \"§7§lCommon\",\n"), "{out}");
-        assert!(out.contains("    \"pack.name\": \"Rarity & \\\"Stats\\\"\",\n"), "{out}");
+        assert!(
+            out.contains("    \"rrs.rarity.common\": \"§7§lCommon\",\n"),
+            "{out}"
+        );
+        assert!(
+            out.contains("    \"pack.name\": \"Rarity & \\\"Stats\\\"\",\n"),
+            "{out}"
+        );
         assert!(out.contains("  ar_SA: {\n"));
         assert!(out.contains("الندرة"));
-        assert!(out.trim_end().ends_with("};"), "closes as a statement: {out}");
+        assert!(
+            out.trim_end().ends_with("};"),
+            "closes as a statement: {out}"
+        );
     }
 
     #[test]

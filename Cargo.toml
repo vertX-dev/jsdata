@@ -1,0 +1,14 @@
+[package]
+name = "jsdata"
+version = "0.1.0"
+edition = "2021"
+description = "Extract JS declarations from addon sources into a generated _wikiData.js module"
+license = "MIT"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+notify = "8"
+# CommonMark parser (the one rustdoc uses); default-features off drops the CLI-only getopts dep
+pulldown-cmark = { version = "0.12", default-features = false, features = ["html"] }
+# reuse Vertion's version-marker filter (parser/filter/config) — no second marker language
+vertion = { path = "../Vertion" }

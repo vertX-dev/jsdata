@@ -1,0 +1,27 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+
+# Cargo
+Cargo.lock.bak
+
+# VS Code extension build artifacts
+/extension/node_modules/
+/extension/out/
+/extension/*.vsix
+
+# Generated output (the tool writes these into consuming projects, but a
+# scratch config in this repo would land one here)
+_wikiData.js
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,33 @@
+{
+  "name": "jsdata-vscode",
+  "displayName": "jsdata",
+  "description": "Track JS declarations in jsdata.cfg and mark tracked declarations",
+  "version": "0.1.0",
+  "publisher": "vertx",
+  "engines": { "vscode": "^1.85.0" },
+  "main": "./out/extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "commands": [
+      {
+        "command": "jsdata.track",
+        "title": "jsdata: Track declaration under cursor"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "jsdata.track",
+        "key": "ctrl+alt+w",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5"
+  }
+}

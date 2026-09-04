@@ -1,8 +1,12 @@
 //! Version + tag filtering for the `version` / `versionTags` directives, the
 //! `--- <spec> [tags]` per-directive pin, and the `--version` / `--tag` flags.
-//! Reuses [[Vertion]]'s marker filter verbatim — WDE never parses a version
-//! marker itself, and tag matching is Vertion's (`tag_passes`): an **empty**
-//! filter passes everything, and an **untagged** block passes any filter.
+//! Reuses [Vertion]'s marker filter verbatim — jsdata never parses a version
+//! marker itself, and tag matching is Vertion's (`tag_passes`): tags are
+//! **opt-in**, so an **empty** filter activates no tags and every *tagged*
+//! block is skipped, while an **untagged** block passes any filter. `*` is the
+//! wildcard that admits every tag.
+//!
+//! [Vertion]: https://github.com/vertX-dev/vertion
 //!
 //! `spec` is Vertion's syntax, restricted here to plain and range forms:
 //!   "2.1"        cumulative (base + everything <= 2.1)
@@ -21,13 +25,15 @@ const UNBOUNDED: &str = "999999.0.0";
 ///
 /// The two halves resolve **independently** (see `lib::effective_version`), so a
 /// `--- 2.4` pin that names no tags still inherits `--tag` / `versionTags`.
-/// Write `--- 2.4 []` to mean "this entry, explicitly untagged".
+/// Write `--- 2.4 []` to mean "this entry, with no tags active" — which skips
+/// every tagged block — or `--- 2.4 [*]` to admit them all.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct VersionSpec {
     /// `None` = inherit the version from the next level down; the tags may still
     /// be set (a tags-only pin, `--- [beta]`).
     pub spec: Option<String>,
-    /// `None` = inherit tags; `Some(vec![])` = explicitly no tag filter.
+    /// `None` = inherit tags; `Some(vec![])` = explicitly no tags active, which
+    /// skips every tagged block. `Some(vec!["*"])` admits them all.
     pub tags: Option<Vec<String>>,
 }
 
@@ -201,8 +207,22 @@ mod tests {
 
     #[test]
     fn tags_select_blocks_vertion_style() {
-        // No filter → every tagged block passes (Vertion's `tag_passes`).
-        let all = filter_source(TAGGED, "js", &spec("2.1")).unwrap();
+        // Tags are opt-in (Vertion's `tag_passes`): no filter activates no
+        // tags, so every *tagged* block is skipped — untagged content stays.
+        let none = filter_source(TAGGED, "js", &spec("2.1")).unwrap();
+        assert!(none.contains("base: 1"), "{none}");
+        assert!(!none.contains("beta: 2") && !none.contains("ui: 3"), "{none}");
+
+        // `*` is the wildcard that admits every tag.
+        let all = filter_source(
+            TAGGED,
+            "js",
+            &VersionSpec {
+                spec: Some("2.1".into()),
+                tags: Some(vec!["*".into()]),
+            },
+        )
+        .unwrap();
         assert!(all.contains("beta: 2") && all.contains("ui: 3"), "{all}");
 
         // A filter keeps matching tags and drops the rest.

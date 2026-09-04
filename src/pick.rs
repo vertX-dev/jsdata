@@ -326,14 +326,27 @@ mod tests {
             "export const C = 2;\n",
             "//version 2.0 [tools]*\n",
         );
-        let all = candidates(
+        // Tags are opt-in: with no tag active neither tagged declaration
+        // survives, so there is nothing to choose between.
+        let none = candidates(
             src,
             "C",
             CommentStyle::DoubleSlash,
             Some((&mode("2.5"), &[])),
         )
         .unwrap();
-        assert!(all[0].passes && all[1].passes, "no filter keeps both");
+        assert!(!none[0].passes && !none[1].passes, "{none:?}");
+        assert_eq!(choose(&none), None);
+
+        // The `*` wildcard admits both, and the newest one wins.
+        let all = candidates(
+            src,
+            "C",
+            CommentStyle::DoubleSlash,
+            Some((&mode("2.5"), &["*".to_string()])),
+        )
+        .unwrap();
+        assert!(all[0].passes && all[1].passes, "wildcard keeps both");
 
         let tools = candidates(
             src,

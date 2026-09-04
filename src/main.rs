@@ -44,8 +44,9 @@ struct Cli {
     version: Option<String>,
 
     /// Only keep marker blocks carrying one of these tags, exactly as Vertion's
-    /// `--tag` does: an empty filter keeps everything, and untagged blocks always
-    /// survive. Repeatable, and comma-separated values are split.
+    /// `--tag` does: tags are opt-in, so with no `--tag` at all every *tagged*
+    /// block is skipped, while untagged blocks always survive. Pass `*` to admit
+    /// every tag. Repeatable, and comma-separated values are split.
     /// Overrides the config's `versionTags`; a `--- <spec> [tags]` pin overrides
     /// this. From a vertion build: `--tag %VERTION_TAGS%`.
     #[arg(short = 't', long = "tag", value_name = "TAG")]

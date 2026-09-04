@@ -154,7 +154,21 @@ Precedence, highest first: a directive's `--- ` pin → the `--version` / `--tag
 config's `version` / `versionTags` → unfiltered.
 
 The version and the tags resolve **independently**, so `--- 2.0` still inherits the surrounding
-tag filter. Write `--- 2.0 []` for "this entry, explicitly untagged".
+tag filter.
+
+**Tags are opt-in**, exactly as in Vertion: a tagged block ships only when one of its tags is
+active, so with no tag filter at all every *tagged* block is skipped. Untagged blocks are never
+affected. `*` is the wildcard that admits every tag.
+
+| Tag filter | Effect |
+|---|---|
+| none | untagged content only — every tagged block is skipped |
+| `[beta]` | untagged content plus blocks tagged `beta` |
+| `[*]` | everything, whatever its tags |
+| `[]` | explicitly no tags active — use it to override an inherited `versionTags` |
+
+This matters because it keeps the generated module consistent with the build: `jsdata --tag beta`
+sees exactly what `vertion build --tag beta` shipped.
 
 When one file declares the same `const` several times behind different markers, `jsdata` picks
 the newest declaration that survives the filter. If every declaration is gated out, the entry is
@@ -210,7 +224,7 @@ config's own directory, so `out` keeps landing in the project.
 | `--watch` | Rebuild when the config or any referenced source changes |
 | `--structure` | Print what the config yields — every entry, its value shape, and for a multiply-declared `const`, each version found and which one this run selects |
 | `--version SPEC` | Extract as of a version |
-| `-t`, `--tag TAG` | Restrict to marker blocks carrying a tag. Repeatable; comma-separated values are split |
+| `-t`, `--tag TAG` | Activate a tag. Repeatable; comma-separated values are split. Tags are opt-in — with none given, every tagged block is skipped. Pass `*` for all |
 
 > **`--version` does not print the tool's version.** It means "extract as of this game version",
 > which is the whole point of the flag for a Vertion `run` line. Use `--help` for the version.
@@ -245,10 +259,6 @@ with `npm install && npm run compile` in `extension/`.
 
 ## Known issues
 
-- **Tag filtering with an empty filter is wrong.** The intended semantics are Vertion's: an
-  empty tag filter passes every block, and an untagged block passes any filter. In practice an
-  empty filter currently drops tagged blocks, which also makes the `--- <spec> []` pin form
-  behave as "match nothing tagged" rather than "no tag filter". Three tests fail on this.
 - `md` directives do not support version pins yet.
 
 ## License

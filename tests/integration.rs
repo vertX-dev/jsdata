@@ -451,7 +451,8 @@ fn version_and_tag_precedence() {
     assert!(js.contains("beta: 1"), "pin dropped inherited tags: {js}");
     assert!(!js.contains("ui: 2"), "{js}");
 
-    // 4. `[]` on a pin means "explicitly untagged", so every tag survives.
+    // 4. `[]` on a pin means "no tags active here", overriding the inherited
+    //    `versionTags` — tags are opt-in, so every tagged block is skipped.
     fs::write(
         &cfg,
         "version = 2.5\nversionTags = [beta]\nvar A = src/a.js -> const A --- 2.5 []\n",
@@ -459,7 +460,19 @@ fn version_and_tag_precedence() {
     .unwrap();
     assert!(jsdata::build(&cfg, true, None).errors.is_empty());
     let js = read();
+    assert!(js.contains("base: 0"), "{js}");
+    assert!(!js.contains("beta: 1") && !js.contains("ui: 2"), "{js}");
+
+    // 5. `[*]` is how you ask for every tag.
+    fs::write(
+        &cfg,
+        "version = 2.5\nversionTags = [beta]\nvar A = src/a.js -> const A --- 2.5 [*]\n",
+    )
+    .unwrap();
+    assert!(jsdata::build(&cfg, true, None).errors.is_empty());
+    let js = read();
     assert!(js.contains("beta: 1") && js.contains("ui: 2"), "{js}");
+    assert!(!js.contains("future: 3"), "pin version ignored: {js}");
 
     let _ = fs::remove_dir_all(&d);
 }

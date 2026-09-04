@@ -38,7 +38,7 @@ impl Options {
 ///
 /// The version and the tags resolve *independently*, so a `--- 2.4` pin that
 /// names no tags still inherits `--tag` / `versionTags`. Write `--- 2.4 []` for
-/// "this entry, explicitly untagged".
+/// "this entry, with no tags active", or `--- 2.4 [*]` to admit every tag.
 pub(crate) fn effective_version(layers: &[Option<&VersionSpec>]) -> Option<VersionSpec> {
     let spec = layers.iter().flatten().find_map(|v| v.spec.clone());
     let tags = layers.iter().flatten().find_map(|v| v.tags.clone());

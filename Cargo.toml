@@ -11,4 +11,4 @@ notify = "8"
 # CommonMark parser (the one rustdoc uses); default-features off drops the CLI-only getopts dep
 pulldown-cmark = { version = "0.12", default-features = false, features = ["html"] }
 # reuse Vertion's version-marker filter (parser/filter/config) — no second marker language
-vertion = { path = "../Vertion" }
+vertion = "1.0"

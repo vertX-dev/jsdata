@@ -8,6 +8,17 @@ fn scratch(name: &str) -> PathBuf {
     d
 }
 
+/// The generated module with its three-line header stripped.
+///
+/// The header embeds the config file's absolute path, so asserting that some
+/// short word is *absent* from the whole file silently depends on where the
+/// temp directory happens to live. macOS puts it under `/var/folders/…`, and
+/// "f-old-ers" contains "old" — which failed `the_chosen_declaration_is_still_filtered_inside`
+/// on macOS only. Assert against the body whenever the needle is a plain word.
+fn body(js: &str) -> &str {
+    js.split_once("\n\n").map(|(_, b)| b).unwrap_or(js)
+}
+
 #[test]
 fn end_to_end_build() {
     let d = scratch("e2e");
@@ -646,7 +657,10 @@ fn the_chosen_declaration_is_still_filtered_inside() {
 
     jsdata::build(&cfg, true, Some("2.2"));
     let js = fs::read_to_string(&out).unwrap();
-    assert!(js.contains("a: 1") && !js.contains("old"), "{js}");
+    assert!(
+        body(&js).contains("a: 1") && !body(&js).contains("old"),
+        "{js}"
+    );
     assert!(
         !js.contains("b: 2"),
         "nested 2.5 block survived at 2.2:\n{js}"

@@ -1,13 +1,44 @@
 {
   "name": "jsdata-vscode",
   "displayName": "jsdata",
-  "description": "Track JS declarations in jsdata.cfg and mark tracked declarations",
+  "description": "Highlighting for jsdata.cfg, plus tracking JS declarations from the editor",
   "version": "0.1.0",
   "publisher": "vertx",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/vertX-dev/jsdata.git" },
+  "homepage": "https://github.com/vertX-dev/jsdata#editor-support",
+  "bugs": { "url": "https://github.com/vertX-dev/jsdata/issues" },
+  "categories": ["Programming Languages", "Snippets"],
+  "keywords": ["jsdata", "codegen", "minecraft", "wiki"],
   "engines": { "vscode": "^1.85.0" },
   "main": "./out/extension.js",
   "activationEvents": ["onStartupFinished"],
   "contributes": {
+    "languages": [
+      {
+        "id": "jsdata-cfg",
+        "aliases": ["jsdata config", "jsdata"],
+        "filenames": ["jsdata.cfg"],
+        "filenamePatterns": ["*.jsdata.cfg"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "jsdata-cfg",
+        "scopeName": "source.jsdata",
+        "path": "./syntaxes/jsdata.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.expression.js": "javascript"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "jsdata-cfg",
+        "path": "./snippets/jsdata.code-snippets"
+      }
+    ],
     "commands": [
       {
         "command": "jsdata.track",

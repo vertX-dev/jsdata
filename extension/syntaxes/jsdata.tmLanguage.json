@@ -1,0 +1,192 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "jsdata config",
+  "scopeName": "source.jsdata",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#version-setting" },
+    { "include": "#out" },
+    { "include": "#let" },
+    { "include": "#var" },
+    { "include": "#md" },
+    { "include": "#langs" },
+    { "include": "#vars" }
+  ],
+  "repository": {
+    "comment": {
+      "comment": "Only a line whose first non-space char is `#` — a `#` mid-path is literal.",
+      "match": "^\\s*(#).*$",
+      "name": "comment.line.number-sign.jsdata",
+      "captures": { "1": { "name": "punctuation.definition.comment.jsdata" } }
+    },
+
+    "version-setting": {
+      "comment": "`version SPEC [tags]` / `versionTags [a, b]`, with an optional `=`.",
+      "begin": "^\\s*(versionTags|version)\\s*(=?)",
+      "beginCaptures": {
+        "1": { "name": "keyword.other.setting.jsdata" },
+        "2": { "name": "keyword.operator.assignment.jsdata" }
+      },
+      "end": "$",
+      "patterns": [{ "include": "#tag-list" }, { "include": "#version-spec" }]
+    },
+
+    "out": {
+      "begin": "^\\s*(out)(?=\\s|$)",
+      "beginCaptures": { "1": { "name": "keyword.control.directive.jsdata" } },
+      "end": "$",
+      "patterns": [{ "include": "#path" }]
+    },
+
+    "let": {
+      "comment": "The RHS is emitted verbatim into a JS module, so it is highlighted as JS.",
+      "begin": "^\\s*(let)\\s+([^\\s=]+)\\s*(=)\\s*",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.jsdata" },
+        "2": { "name": "entity.name.variable.jsdata" },
+        "3": { "name": "keyword.operator.assignment.jsdata" }
+      },
+      "end": "$",
+      "contentName": "meta.embedded.expression.js",
+      "patterns": [{ "include": "source.js" }]
+    },
+
+    "var": {
+      "begin": "^\\s*(var)\\s+([^\\s=]+)\\s*(=)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.jsdata" },
+        "2": { "name": "entity.name.variable.jsdata" },
+        "3": { "name": "keyword.operator.assignment.jsdata" }
+      },
+      "end": "$",
+      "patterns": [
+        { "include": "#version-pin" },
+        { "include": "#decl-arrow" },
+        { "include": "#path" }
+      ]
+    },
+
+    "md": {
+      "begin": "^\\s*(md)\\s+([^\\s<]+)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.jsdata" },
+        "2": { "name": "entity.name.variable.jsdata" }
+      },
+      "end": "$",
+      "patterns": [
+        { "include": "#html-mode" },
+        { "include": "#pull-arrow" },
+        { "include": "#path" }
+      ]
+    },
+
+    "langs": {
+      "comment": "The export name is fixed at `langs`, so the keyword is also the name.",
+      "begin": "^\\s*(langs)(?=\\s|$)",
+      "beginCaptures": { "1": { "name": "keyword.control.directive.jsdata" } },
+      "end": "$",
+      "patterns": [
+        { "include": "#version-pin" },
+        { "include": "#pull-arrow" },
+        { "include": "#path" }
+      ]
+    },
+
+    "vars": {
+      "comment": "Merge mode: NAME <-- PROJECT --> FILE, or NAME <-- PROJECT <-- CONFIG.",
+      "begin": "^\\s*(vars)\\s+([^\\s<]+)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.jsdata" },
+        "2": { "name": "entity.name.variable.jsdata" }
+      },
+      "end": "$",
+      "patterns": [
+        { "include": "#version-pin" },
+        { "include": "#pull-arrow" },
+        { "include": "#path" }
+      ]
+    },
+
+    "decl-arrow": {
+      "comment": "Requires the whole `-> [export] const NAME` tail, so a `->` inside a path stays path text — mirroring the CLI's split on the LAST `->`.",
+      "match": "(->)\\s*(?:(export)\\s+)?(const)\\s+([A-Za-z_$][A-Za-z0-9_$]*)(?=\\s+---\\s|\\s*$)",
+      "captures": {
+        "1": { "name": "keyword.operator.arrow.jsdata" },
+        "2": { "name": "storage.modifier.export.jsdata" },
+        "3": { "name": "storage.type.const.jsdata" },
+        "4": { "name": "variable.other.constant.jsdata" }
+      }
+    },
+
+    "pull-arrow": {
+      "match": "<--|-->",
+      "name": "keyword.operator.arrow.jsdata"
+    },
+
+    "html-mode": {
+      "comment": "The `html` mode word, not a path ending in `.html`.",
+      "match": "(?<![^\\s])html\\s*$",
+      "name": "constant.language.mode.jsdata"
+    },
+
+    "version-pin": {
+      "comment": "` --- <spec> [tags]`. The separator is a space plus three dashes, which never collides with the two-dash arrows.",
+      "begin": "(?<=\\s)(---)(?=\\s|$)",
+      "beginCaptures": { "1": { "name": "punctuation.separator.version.jsdata" } },
+      "end": "$",
+      "patterns": [{ "include": "#tag-list" }, { "include": "#version-spec" }]
+    },
+
+    "version-spec": {
+      "match": "\\d+(?:\\.\\d+)*",
+      "name": "constant.numeric.version.jsdata"
+    },
+
+    "tag-list": {
+      "begin": "\\[",
+      "beginCaptures": { "0": { "name": "punctuation.definition.tags.begin.jsdata" } },
+      "end": "\\]",
+      "endCaptures": { "0": { "name": "punctuation.definition.tags.end.jsdata" } },
+      "patterns": [
+        { "match": "\\*", "name": "constant.language.wildcard.jsdata" },
+        { "match": ",", "name": "punctuation.separator.tags.jsdata" },
+        { "match": "[^,\\s\\]]+", "name": "entity.name.tag.jsdata" }
+      ]
+    },
+
+    "path": {
+      "comment": "Whatever is left over. Paths may contain spaces; every run is coloured the same, so the seam is invisible.",
+      "match": "\\S+",
+      "name": "string.unquoted.path.jsdata",
+      "captures": { "0": { "patterns": [{ "include": "#path-expansion" }] } }
+    },
+
+    "path-expansion": {
+      "patterns": [
+        {
+          "comment": "A leading `~`, but only as a whole segment — `~foo` is a filename.",
+          "match": "(?<![^\\s])~(?=[/\\\\]|$)",
+          "name": "variable.language.home.jsdata"
+        },
+        {
+          "match": "%[^%\\s]*%",
+          "name": "variable.other.substitution.jsdata"
+        },
+        {
+          "match": "(\\$\\{)([^}:\\s]*)(?:(:-)([^}]*))?(\\})",
+          "captures": {
+            "1": { "name": "punctuation.definition.variable.jsdata" },
+            "2": { "name": "variable.other.substitution.jsdata" },
+            "3": { "name": "keyword.operator.fallback.jsdata" },
+            "4": { "name": "string.unquoted.fallback.jsdata" },
+            "5": { "name": "punctuation.definition.variable.jsdata" }
+          }
+        },
+        {
+          "match": "\\$[A-Za-z_][A-Za-z0-9_]*",
+          "name": "variable.other.substitution.jsdata"
+        }
+      ]
+    }
+  }
+}

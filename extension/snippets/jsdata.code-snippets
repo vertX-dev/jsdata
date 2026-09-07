@@ -1,0 +1,57 @@
+{
+  "out": {
+    "prefix": "out",
+    "body": ["out ${1:src/wiki/_wikiData.js}"],
+    "description": "Where to write the generated module"
+  },
+  "var": {
+    "prefix": "var",
+    "body": ["var ${1:NAME} = ${2:src/path.js} -> const ${3:$1}"],
+    "description": "Extract `const DECL` from a source file"
+  },
+  "var with version pin": {
+    "prefix": "varv",
+    "body": ["var ${1:NAME} = ${2:src/path.js} -> const ${3:$1} --- ${4:2.1}"],
+    "description": "Extract a declaration as of a pinned version"
+  },
+  "let": {
+    "prefix": "let",
+    "body": ["let ${1:NAME} = ${2:Object.keys(OTHER).length}"],
+    "description": "Emit a JS expression as-is"
+  },
+  "md": {
+    "prefix": "md",
+    "body": ["md ${1:NAME} <-- ${2:docs/page.md}"],
+    "description": "A markdown file as a JS string"
+  },
+  "md as html": {
+    "prefix": "mdhtml",
+    "body": ["md ${1:NAME} <-- ${2:docs/page.md} <-- html"],
+    "description": "A markdown file converted to HTML"
+  },
+  "langs": {
+    "prefix": "langs",
+    "body": ["langs <-- ${1:RP/texts} <-- ${2:RP/texts/languages.json}"],
+    "description": "Locale .lang bundle, exported as `langs`"
+  },
+  "vars from config": {
+    "prefix": "vars",
+    "body": ["vars ${1:NAME} <-- ${2:../project} <-- ${3:jsdata.cfg}"],
+    "description": "Merge mode: rebuild a project from its own config"
+  },
+  "vars from built file": {
+    "prefix": "varsfile",
+    "body": ["vars ${1:NAME} <-- ${2:../project} --> ${3:_wikiData.js}"],
+    "description": "Merge mode: pull an already-generated module verbatim"
+  },
+  "version": {
+    "prefix": "version",
+    "body": ["version ${1:2.1}"],
+    "description": "Default version for every extraction in this config"
+  },
+  "versionTags": {
+    "prefix": "versionTags",
+    "body": ["versionTags [${1:beta}]"],
+    "description": "Tags active for every extraction in this config"
+  }
+}

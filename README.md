@@ -252,10 +252,22 @@ dropped, so `jsdata` warns when it sees that combination.
 
 ## Editor support
 
-`extension/` holds a VS Code extension: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>W</kbd> appends a
-`var` line for the declaration under the cursor, and tracked declarations get an inline marker.
-It reads `jsdata.cfg` from the workspace root. Not published to the Marketplace yet — build it
-with `npm install && npm run compile` in `extension/`.
+`extension/` holds a VS Code extension:
+
+- **Syntax highlighting** for `jsdata.cfg` — directives, arrows, version pins and tag lists, and
+  paths with their `~` / `%VAR%` / `$VAR` expansions. A `let` right-hand side is highlighted as
+  JavaScript, since that is what it becomes. It highlights *shape*, not validity — `--check`
+  stays the judge of whether a config is correct.
+- **Ctrl+click a path** to open it. Paths resolve against the config's own directory, like the
+  CLI; a path that does not exist, or that still contains an unexpanded variable, is not linked.
+- **Snippets** for every directive — type `var`, `langs`, `vars`, `mdhtml`, … and press Tab.
+- <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>W</kbd> appends a `var` line for the declaration under the
+  cursor, and tracked declarations get an inline marker.
+
+The language binds to the exact filename `jsdata.cfg` (or `*.jsdata.cfg`) rather than to
+`*.cfg`, so it never takes over `vertion.cfg` or any other config in the same workspace. The
+keybind and the marker read `jsdata.cfg` from the workspace root. Not published to the
+Marketplace yet — build it with `npm install && npm run compile` in `extension/`.
 
 ## Security
 

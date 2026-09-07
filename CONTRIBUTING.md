@@ -25,6 +25,21 @@ npm ci
 npm run compile
 ```
 
+### Changing the config grammar
+
+The config DSL is described in three places, and a change to one usually needs
+the other two:
+
+| Where | What it does |
+|---|---|
+| [`src/config.rs`](src/config.rs) | The parser. The only authority on what is valid. |
+| [`extension/syntaxes/jsdata.tmLanguage.json`](extension/syntaxes/jsdata.tmLanguage.json) | Highlighting. Deliberately loose — it colours shape and never judges validity, so it cannot disagree with the parser about whether a config is correct. |
+| [`extension/src/extension.ts`](extension/src/extension.ts) | `pathRefs` mirrors the splitting rules (the ` ---` pin first, then the arrows) to find the paths worth linking; `parseVars` mirrors the `var` line for decorations. |
+
+Adding a directive means a new rule in the grammar, a case in `pathRefs` if it
+names a path, and a snippet in
+[`extension/snippets/jsdata.code-snippets`](extension/snippets/jsdata.code-snippets).
+
 ## Before you open a pull request
 
 Run what CI runs, so you find out here rather than there:

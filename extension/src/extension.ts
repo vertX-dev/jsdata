@@ -1,7 +1,8 @@
 // jsdata VS Code extension (phase 2). Depends only on the config grammar:
 //   var NAME = <path> -> const DECL
 // Keybind appends a var line for the declaration under the cursor; tracked
-// declarations get a decoration, refreshed on config save.
+// declarations get a decoration, refreshed on config save. The config itself
+// gets highlighting (syntaxes/jsdata.tmLanguage.json) and clickable paths.
 
 import * as fs from "fs";
 import * as path from "path";
@@ -84,6 +85,116 @@ async function track(): Promise<void> {
   vscode.window.showInformationMessage(`jsdata: tracking \`${name}\` from ${rel}`);
 }
 
+interface PathSpan {
+  start: number;
+  end: number;
+}
+
+/// One path operand of a directive. `prefix` is the project path a `vars` file
+/// is resolved against, matching the CLI's `dir.join(project).join(file)`.
+interface PathRef {
+  span: PathSpan;
+  prefix?: string;
+}
+
+/// Span of `line[from..to]` with the surrounding whitespace trimmed off, or
+/// undefined when nothing is left.
+function trimmedSpan(line: string, from: number, to: number): PathSpan | undefined {
+  let start = from;
+  let end = to;
+  while (start < end && /\s/.test(line[start])) start++;
+  while (end > start && /\s/.test(line[end - 1])) end--;
+  return end > start ? { start, end } : undefined;
+}
+
+/// The path operands of one config line. Mirrors the Rust parser's splitting
+/// order: the ` ---` pin comes off the end first, then the arrows.
+function pathRefs(line: string): PathRef[] {
+  const head = /^\s*(\S+)/.exec(line);
+  if (!head || head[1].startsWith("#")) return [];
+  const word = head[1];
+  const from = head[0].length;
+  let to = line.length;
+
+  if (word === "var" || word === "vars" || word === "langs") {
+    const pin = line.lastIndexOf(" ---");
+    if (pin >= from && line.slice(pin + 4).trim() !== "") to = pin;
+  }
+
+  const keep = (s: PathSpan | undefined): PathRef[] => (s ? [{ span: s }] : []);
+  const after = (i: number) => i + 3; // past a `<--` / `-->`
+
+  switch (word) {
+    case "out":
+      return keep(trimmedSpan(line, from, to));
+    case "var": {
+      const eq = line.indexOf("=", from);
+      if (eq < 0) return [];
+      const rhs = eq + 1;
+      const arrow = line.slice(rhs, to).lastIndexOf("->");
+      return arrow < 0 ? [] : keep(trimmedSpan(line, rhs, rhs + arrow));
+    }
+    case "md": {
+      const first = line.indexOf("<--", from);
+      if (first < 0) return [];
+      const second = line.indexOf("<--", after(first));
+      return keep(trimmedSpan(line, after(first), second < 0 ? to : second));
+    }
+    case "langs": {
+      const first = line.indexOf("<--", from);
+      if (first < 0) return [];
+      const second = line.indexOf("<--", after(first));
+      if (second < 0) return [];
+      return [
+        ...keep(trimmedSpan(line, after(first), second)),
+        ...keep(trimmedSpan(line, after(second), to)),
+      ];
+    }
+    case "vars": {
+      const first = line.indexOf("<--", from);
+      if (first < 0) return [];
+      // `--> FILE` is tried before `<-- CONFIG`, like the CLI
+      const built = line.indexOf("-->", after(first));
+      const sep = built >= 0 ? built : line.indexOf("<--", after(first));
+      if (sep < 0) return [];
+      const project = trimmedSpan(line, after(first), sep);
+      const target = trimmedSpan(line, after(sep), to);
+      if (!target) return [];
+      return [{ span: target, prefix: project && line.slice(project.start, project.end) }];
+    }
+    default:
+      return [];
+  }
+}
+
+/// Ctrl+click a path to open it. Only paths that resolve to a file that exists
+/// become links; an unexpanded `~` / `%VAR%` / `$VAR` is left alone rather than
+/// guessed at, since only the CLI knows the environment it will run in.
+function documentLinks(document: vscode.TextDocument): vscode.DocumentLink[] {
+  const dir = path.dirname(document.uri.fsPath);
+  const links: vscode.DocumentLink[] = [];
+  for (let i = 0; i < document.lineCount; i++) {
+    const line = document.lineAt(i).text;
+    for (const ref of pathRefs(line)) {
+      const text = line.slice(ref.span.start, ref.span.end);
+      if (/[~%$]/.test(text) || /[~%$]/.test(ref.prefix ?? "")) continue;
+      const target = path.resolve(dir, ref.prefix ?? "", text);
+      try {
+        if (!fs.statSync(target).isFile()) continue;
+      } catch {
+        continue; // not there yet; nothing to link to
+      }
+      links.push(
+        new vscode.DocumentLink(
+          new vscode.Range(i, ref.span.start, i, ref.span.end),
+          vscode.Uri.file(target)
+        )
+      );
+    }
+  }
+  return links;
+}
+
 const decoration = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
   after: {
@@ -121,6 +232,10 @@ function refreshDecorations(): void {
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("jsdata.track", track),
+    vscode.languages.registerDocumentLinkProvider(
+      { language: "jsdata-cfg" },
+      { provideDocumentLinks: documentLinks }
+    ),
     // config save refreshes per spec; source saves too (decls move around)
     vscode.workspace.onDidSaveTextDocument(refreshDecorations),
     vscode.window.onDidChangeVisibleTextEditors(refreshDecorations),

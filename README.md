@@ -283,6 +283,16 @@ to, sanitize downstream before rendering.
 The generated module is a build artifact. Treat it as you would any generated code — review the
 diff rather than assuming it is inert.
 
+[SECURITY.md](SECURITY.md) has the full threat model and explains how to report a vulnerability
+privately.
+
+## Contributing
+
+Bug reports and focused pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for
+how to get set up, which of the three test suites a change belongs in, and a couple of traps
+worth knowing before you write assertions. By taking part you agree to the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Known issues
 
 - `md` directives do not support version pins yet.

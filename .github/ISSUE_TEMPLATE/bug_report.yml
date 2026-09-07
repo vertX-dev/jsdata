@@ -1,0 +1,77 @@
+name: Bug report
+description: Something behaves differently from what the docs say
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: if this is a **security** problem, please don't post it
+        here — see [SECURITY.md](https://github.com/vertX-dev/jsdata/blob/main/SECURITY.md).
+
+        Two things that are intended behaviour rather than bugs: a `jsdata.cfg`
+        can read any path it names, and `md ... <-- html` passes raw HTML
+        through without sanitizing.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: >-
+        The `version` from `Cargo.toml`, or the commit you built from. Note that
+        `jsdata --version` is *not* the tool's version — it means "extract as of
+        this game version".
+      placeholder: "0.1.0, or commit 3ddb2ef"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: component
+    attributes:
+      label: Where does it happen?
+      description: Which command or directive, or the VSCode extension.
+      placeholder: "jsdata --pull-all, or: the `langs` directive, or: the VSCode extension"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: |
+        The smallest thing that shows the problem. A `jsdata.cfg`, one source
+        file, and the exact command you ran is usually enough.
+
+        The config grammar is whitespace- and arrow-sensitive, and extraction
+        copies declarations verbatim, so please paste rather than retype.
+
+        `jsdata --structure` prints what the config resolves to without writing
+        anything — its output is often the fastest way to show what went wrong.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: Anything jsdata printed, including the error text.
+      render: text

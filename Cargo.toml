@@ -17,7 +17,7 @@ exclude = ["extension/", ".github/"]
 clap = { version = "4", features = ["derive"] }
 notify = "8"
 # CommonMark parser (the one rustdoc uses); default-features off drops the CLI-only getopts dep
-pulldown-cmark = { version = "0.12", default-features = false, features = ["html"] }
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
 # reuse Vertion's version-marker filter (parser/filter/config) — no second marker language
 vertion = "1.0"
 
